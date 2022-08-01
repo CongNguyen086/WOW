@@ -134,7 +134,7 @@ class @WOW
       if @disabled()
         @resetStyle()
       else
-        @applyStyle(box, true) for box in @boxes
+        @applyStyle(box, false, true) for box in @boxes
     if !@disabled()
       @util().addEvent @config.scrollContainer || window, 'scroll', @scrollHandler
       @util().addEvent window, 'resize', @scrollHandler
@@ -168,7 +168,7 @@ class @WOW
         if @stopped or @disabled()
           @resetStyle()
         else
-          @applyStyle(box, true)
+          @applyStyle(box, true, true)
         @scrolled = true
 
   # show box element
@@ -185,12 +185,12 @@ class @WOW
 
     box
 
-  applyStyle: (box, hidden) ->
+  applyStyle: (box, hidden, cached) ->
     duration  = box.getAttribute('data-wow-duration')
     delay     = box.getAttribute('data-wow-delay')
     iteration = box.getAttribute('data-wow-iteration')
 
-    @animate => @customStyle(box, hidden, duration, delay, iteration)
+    @animate => @customStyle(box, hidden, cached, duration, delay, iteration)
 
   animate: (->
     if 'requestAnimationFrame' of window
@@ -209,14 +209,14 @@ class @WOW
       target = event.target || event.srcElement
       target.className = target.className.replace(@config.animateClass, '').trim()
 
-  customStyle: (box, hidden, duration, delay, iteration) ->
-    @cacheAnimationName(box) if hidden
+  customStyle: (box, hidden, cached, duration, delay, iteration) ->
+    @cacheAnimationName(box) if cached
     box.style.visibility = if hidden then 'hidden' else 'visible'
 
     @vendorSet box.style, animationDuration: duration if duration
     @vendorSet box.style, animationDelay: delay if delay
     @vendorSet box.style, animationIterationCount: iteration if iteration
-    @vendorSet box.style, animationName: if hidden then 'none' else @cachedAnimationName(box)
+    @vendorSet box.style, animationName: if cached then 'none' else @cachedAnimationName(box)
 
     box
 
@@ -250,6 +250,7 @@ class @WOW
 
   # fast window.scroll callback
   scrollHandler: =>
+    box.style.visibility = 'hidden' for box in @boxes
     @scrolled = true
 
   scrollCallback: =>
